@@ -1,51 +1,40 @@
+import { produce } from "immer";
+
 let ADD_IN_CART = "cart/add";
 let INCREASE_QUANTITY = "cart/increaseQuantity";
 let DECREASE_QUANTITY = "cart/decreaseQuantity";
 let CART_REMOVE_ITEM = "cart/removeItem";
 
 export default function cartReducer(state = [], action) {
-  switch (action.type) {
-    case ADD_IN_CART:
-      const existData = state.find(
-        (cart) => cart.productId == action.payload.productId
-      );
-
-      if (existData) {
-        return state.map((cartItem) => {
-          if (cartItem.productId == existData.productId) {
-            return { ...cartItem, quantity: cartItem.quantity + 1 };
-          }
-          return cartItem;
-        });
-      }
-      return [...state, { ...action.payload, quantity: 1 }];
-
-    case INCREASE_QUANTITY:
-      return state.map((cartItem) => {
-        if (cartItem.productId == action.payload.productId) {
-          return { ...cartItem, quantity: cartItem.quantity + 1 };
+  return produce(state, (State) => {
+    const existingIndex = State.findIndex(
+      (cartItem) => cartItem.productId === action.payload.productId
+    );
+    switch (action.type) {
+      case ADD_IN_CART:
+        if (existingIndex != -1) {
+          State[existingIndex].quantity += 1;
+          break;
         }
-        return cartItem;
-      });
+        State.push({ ...action.payload, quantity: 1 });
+        break;
 
-    case DECREASE_QUANTITY:
-      return state
-        .map((cartItem) => {
-          if (cartItem.productId == action.payload.productId) {
-            return { ...cartItem, quantity: cartItem.quantity - 1 };
-          }
-          return cartItem;
-        })
-        .filter((cartItem) => cartItem.quantity > 0);
+      case INCREASE_QUANTITY:
+        State[existingIndex].quantity += 1;
+        break;
 
-    case CART_REMOVE_ITEM:
-      return state.filter(
-        (cartItem) => cartItem.productId != action.payload.productId
-      );
+      case DECREASE_QUANTITY:
+        State[existingIndex].quantity -= 1;
+        if (State[existingIndex].quantity == 0) {
+          State.splice(existingIndex, 1);
+        }
+        break;
 
-    default:
-      return state;
-  }
+      case CART_REMOVE_ITEM:
+        State.splice(existingIndex, 1);
+    }
+    return State;
+  });
 }
 
 export const addInCart = (productData) => ({
