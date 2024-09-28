@@ -1,10 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import CartIcon from "../assets/cart-icon.svg";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllProductData } from "../store/slices/Product";
+import { getAllCartItem } from "../store/slices/Cart";
 
 export default function Header() {
-  const cartItems = useSelector((state) => state.Cart);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(getAllProductData());
+
+    dispatch(getAllCartItem());
+  }, []);
+  const cartItems = useSelector((state) => state.Cart.list);
   return (
     <header>
       <div className="header-contents">
@@ -14,7 +22,8 @@ export default function Header() {
         <Link className="cart-icon" to="/cart">
           <img src={CartIcon} alt="cart-icon" />
           <div className="cart-items-count">
-            {cartItems.reduce((acc, curr) => curr.quantity + acc, 0)}
+            {cartItems &&
+              cartItems.reduce((acc, curr) => curr.quantity + acc, 0)}
           </div>
         </Link>
       </div>
